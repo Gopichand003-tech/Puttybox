@@ -28,14 +28,12 @@ console.log("Email pass:", process.env.EMAIL_PASS ? "Loaded ✅" : "Missing ❌"
 const setTokenCookie = (res, token) => {
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
-//     sameSite: "lax",
-// secure: false, // only for localhost
-
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: process.env.NODE_ENV === "production", // true only on Render
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
+
 
 // -------------------- PREMIUM ROUTES --------------------
 router.post("/premium", protect, setPremium);
@@ -93,15 +91,13 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-     // ✅ Clear old cookie first
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
-//       sameSite: "lax",
-// secure: false, // only for localhost
+    // ✅ Clear old cookie first — works in both local and production
+res.clearCookie("token", {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // only secure on production
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+});
 
-    });
 
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -153,15 +149,13 @@ router.post("/google-login", async (req, res) => {
       });
     }
 
-     // ✅ Clear old cookie first
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
-//       sameSite: "lax",
-// secure: false, // only for localhost
+    // ✅ Clear old cookie first — works in both local and production
+res.clearCookie("token", {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // only secure on production
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+});
 
-    });
 
 
     const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {

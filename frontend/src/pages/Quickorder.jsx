@@ -107,10 +107,11 @@ const deliveryCharge = user?.isPremium ? 0 : 40;
       toast.error("Sorry — we deliver only within Vijayawada.");
       return;
     }
-    if (!user || !user._id) {
-      toast.error("Please log in to place an order.");
-      return;
-    }
+    if (!user || (!user._id && !user.id)) {
+  toast.error("Please log in to place an order.");
+  return;
+}
+
 
     try {
       // When online payment chosen -> first show payment video, then worker video + finalize

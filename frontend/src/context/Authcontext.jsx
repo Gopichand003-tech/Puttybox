@@ -13,122 +13,11 @@ export const AuthProvider = ({ children }) => {
   // 🔹 Axios global defaults
   // -------------------------
   axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = import.meta.env.VITE_API_URL;
-
-  // console.log("Axios baseURL:", axios.defaults.baseURL);
-
-  // -------------------------
-  // 🔹 Manual login
-  // -------------------------
-  const loginUser = async (email, password) => {
-    try {
-      const res = await axios.post(
-        `${axios.defaults.baseURL}/api/auth/login`,
-        { email, password },
-        { withCredentials: true }
-      );
-      const u = res.data.user;
-      setUser(u);
-      setIsPremium(u?.isPremium || false);
-      checkPremiumValidity(u);
-      return true;
-    } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
-      return false;
-    }
-  };
+  axios.defaults.baseURL =
+    import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   // -------------------------
-  // 🔹 Google login
-  // -------------------------
-  const loginWithGoogle = async (token) => {
-    try {
-      const res = await axios.post(
-        `${axios.defaults.baseURL}/api/auth/google-login`,
-        { token },
-        { withCredentials: true }
-      );
-      const u = res.data.user;
-      setUser(u);
-      setIsPremium(u?.isPremium || false);
-      checkPremiumValidity(u);
-      return true;
-    } catch (err) {
-      console.error("Google login error:", err.response?.data || err.message);
-      return false;
-    }
-  };
-
-  // -------------------------
-  // 🔹 Logout
-  // -------------------------
-  const logoutUser = async () => {
-    try {
-      await axios.post(
-        `${axios.defaults.baseURL}/api/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-      setUser(null);
-      setIsPremium(false);
-      setIsPremiumActive(false);
-    } catch (err) {
-      console.error("Logout error:", err.message);
-    }
-  };
-
-  // -------------------------
-  // 🔹 Update user
-  // -------------------------
-  const updateUser = (updatedUser) => {
-    setUser((prev) => ({ ...prev, ...updatedUser }));
-    checkPremiumValidity(updatedUser);
-  };
-
-  // -------------------------
-  // 🔹 Fetch user on mount
-  // -------------------------
-  const fetchUser = async () => {
-    try {
-      const res = await axios.get(
-        `${axios.defaults.baseURL}/api/auth/me`,
-        { withCredentials: true }
-      );
-      const u = res.data.user;
-      // console.log("Fetched user:", u);
-      setUser(u || null);
-      setIsPremium(u?.isPremium || false);
-      checkPremiumValidity(u);
-    } catch (err) {
-      console.log("No active session:", err.response?.data || err.message);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // -------------------------
-  // 🔹 Activate Premium
-  // -------------------------
-  const activatePremium = async (months = 1) => {
-  try {
-    const res = await axios.post(
-      `${axios.defaults.baseURL}/api/auth/upgrade-premium`,
-    { durationMonths: months },
-      { withCredentials: true }
-    );
-    const u = res.data.user;
-    setUser(u);
-    setIsPremium(true);
-    checkPremiumValidity(u);
-  } catch (err) {
-    console.error("Failed to activate premium:", err.message);
-  }
-};
-
-
-  // -------------------------
-  // 🔹 Check premium validity
+  // 🔹 Helper - Check Premium Validity
   // -------------------------
   const checkPremiumValidity = (u) => {
     if (!u?.isPremium || !u?.premiumExpiry) {
@@ -141,7 +30,112 @@ export const AuthProvider = ({ children }) => {
   };
 
   // -------------------------
-  // 🔹 Auto-fetch on mount
+  // 🔹 Fetch user on mount
+  // -------------------------
+  const fetchUser = async () => {
+    try {
+      const res = await axios.get(`/api/auth/me`, { withCredentials: true });
+      const u = res.data?.user;
+      setUser(u || null);
+      setIsPremium(u?.isPremium || false);
+      checkPremiumValidity(u);
+    } catch (err) {
+      console.log("No active session:", err.response?.data || err.message);
+      setUser(null);
+      setIsPremium(false);
+      setIsPremiumActive(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // -------------------------
+  // 🔹 Login with email/password
+  // -------------------------
+  const loginUser = async (email, password) => {
+    try {
+      const res = await axios.post(
+        `/api/auth/login`,
+        { email, password },
+        { withCredentials: true }
+      );
+      const u = res.data?.user;
+      setUser(u);
+      setIsPremium(u?.isPremium || false);
+      checkPremiumValidity(u);
+      return true;
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err.message);
+      return false;
+    }
+  };
+
+  // -------------------------
+  // 🔹 Login with Google
+  // -------------------------
+  const loginWithGoogle = async (token) => {
+    try {
+      const res = await axios.post(
+        `/api/auth/google-login`,
+        { token },
+        { withCredentials: true }
+      );
+      const u = res.data?.user;
+      setUser(u);
+      setIsPremium(u?.isPremium || false);
+      checkPremiumValidity(u);
+      return true;
+    } catch (err) {
+      console.error("Google login error:", err.response?.data || err.message);
+      return false;
+    }
+  };
+
+  // -------------------------
+  // 🔹 Logout (clear cookie)
+  // -------------------------
+  const logoutUser = async () => {
+    try {
+      await axios.post(`/api/auth/logout`, {}, { withCredentials: true });
+    } catch (err) {
+      console.error("Logout error:", err.message);
+    } finally {
+      // Always clear client state, even if backend fails
+      setUser(null);
+      setIsPremium(false);
+      setIsPremiumActive(false);
+    }
+  };
+
+  // -------------------------
+  // 🔹 Activate Premium
+  // -------------------------
+  const activatePremium = async (months = 1) => {
+    try {
+      const res = await axios.post(
+        `/api/auth/upgrade-premium`,
+        { durationMonths: months },
+        { withCredentials: true }
+      );
+      const u = res.data?.user;
+      setUser(u);
+      setIsPremium(true);
+      checkPremiumValidity(u);
+    } catch (err) {
+      console.error("Failed to activate premium:", err.message);
+    }
+  };
+
+  // -------------------------
+  // 🔹 Update User (profile, etc.)
+  // -------------------------
+  const updateUser = (updatedUser) => {
+    setUser((prev) => ({ ...prev, ...updatedUser }));
+    checkPremiumValidity(updatedUser);
+  };
+
+  // -------------------------
+  // 🔹 Auto-fetch user on mount
   // -------------------------
   useEffect(() => {
     fetchUser();
