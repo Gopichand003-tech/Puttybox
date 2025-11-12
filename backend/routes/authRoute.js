@@ -29,7 +29,7 @@ const setTokenCookie = (res, token) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "none",
 //     sameSite: "lax",
 // secure: false, // only for localhost
 
@@ -97,7 +97,7 @@ router.post("/login", async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
 //       sameSite: "lax",
 // secure: false, // only for localhost
 
@@ -157,7 +157,7 @@ router.post("/google-login", async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
 //       sameSite: "lax",
 // secure: false, // only for localhost
 

@@ -23,7 +23,7 @@ export const adminLogin = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // true for HTTPS
     //   sameSite: "strict",
-    sameSite: "lax",
+    sameSite: "none",
 
 
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
