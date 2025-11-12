@@ -27,7 +27,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // must match frontend
+    origin: ["http://localhost:5173","https://putty-box.onrender.com" ], // must match frontend
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
