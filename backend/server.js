@@ -17,8 +17,8 @@ import adminRoutes from "./routes/adminRoute.js";
 import NotificationRoutes from "./routes/notifyRoute.js";
 import planRoutes from "./routes/PlansRoute.js";
 import mealRoutes from "./routes/MealRoute.js";
-import { fileURLToPath } from "url";
-import path from "path";
+// import { fileURLToPath } from "url";
+// import path from "path";
 
 // ---------- App Setup ----------
 const app = express();
@@ -104,16 +104,13 @@ app.use((req, res, next) => {
   next();
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, "frontend", "dist"))); // adjust if needed
-
-// ✅ Express 5-compatible fallback route
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
+app.get("/", (req, res) => {
+  res.send("✅ Backend is running successfully!");
 });
+
 
 // ---------- Server Start ----------
 const PORT = process.env.PORT || 5000;
