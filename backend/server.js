@@ -17,6 +17,9 @@ import adminRoutes from "./routes/adminRoute.js";
 import NotificationRoutes from "./routes/notifyRoute.js";
 import planRoutes from "./routes/PlansRoute.js";
 import mealRoutes from "./routes/MealRoute.js";
+import { fileURLToPath } from "url";
+import path from "path";
+
 // ---------- App Setup ----------
 const app = express();
 const server = http.createServer(app);
@@ -99,6 +102,17 @@ setInterval(async () => {
 app.use((req, res, next) => {
   console.log("🧩 Incoming:", req.method, req.url);
   next();
+});
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, "frontend", "dist"))); // adjust if needed
+
+// ✅ Fallback route for React Router
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
 });
 
 // ---------- Server Start ----------
