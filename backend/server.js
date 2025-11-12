@@ -43,11 +43,15 @@ mongoose
 // ---------- Socket.IO ----------
 const io = new IOServer(server, {
   cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT"],
+    origin: [
+      "http://localhost:5173",
+      "https://putty-box.onrender.com", // ✅ same list
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
 });
+
 
 // Make io globally available to controllers
 app.set("io", io);
