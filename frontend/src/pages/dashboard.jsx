@@ -106,7 +106,7 @@ useEffect(() => {
     orders.forEach((order) => {
       const placed = new Date(order.createdAt).getTime();
       const diff = now - placed;
-      const remaining = 2 * 60 * 1000 - diff; // 2 minutes
+      const remaining = 3 * 60 * 1000 - diff; // 2 minutes
 
       // 🔧 Fix: normalize status case
       if (remaining > 0 && order.status?.toLowerCase() === "pending") {
