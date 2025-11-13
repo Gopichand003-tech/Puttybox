@@ -56,7 +56,7 @@ const UpdateProfile = () => {
       if (profilePicFile) data.append("profilePic", profilePicFile);
 
      const res = await axios.put(
-  `${import.meta.env.VITE_API_URL}/api/auth/update-profile`,
+  `${import.meta.env.VITE_API_URL}/api/update/update-profile`,
   data,
   {
     withCredentials: true, // ✅ send cookies
