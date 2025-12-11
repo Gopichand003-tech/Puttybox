@@ -7,6 +7,10 @@ import  protect  from "../Middleware/authMiddleware.js"; // ✅ must use named i
 import nodemailer from "nodemailer";
 import { setPremium, upgradeToPremium , activatePremium , checkPremiumStatus} from "../controller/userController.js"; // ✅ combine import
 import dotenv from "dotenv";
+import sgMail from "@sendgrid/mail";
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 dotenv.config();
 
 const router = express.Router();
@@ -292,31 +296,32 @@ router.post("/reset-password/:token", async (req, res) => {
 });
 
 //Email
-//Email
+// send-email-otp improved
 router.post("/send-email-otp", async (req, res) => {
   try {
-    const rawEmail = req.body.email;
-    const email = (rawEmail || "").toString().trim().toLowerCase();
-
-    console.log("send-email-otp called for:", JSON.stringify(email));
+    const { email } = req.body;
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return res.status(400).json({ message: "Valid email required" });
     }
 
     const now = Date.now();
+    const COOLDOWN_MS = 60 * 1000; // 60s
+    const OTP_TTL_MS = 2 * 60 * 1000; // 2min
 
-    // rate limit via otpStore (fallback) OR via user doc if exists
+    // Use DB user if exists
     const user = await User.findOne({ email });
 
-    // if user exists, use user doc fields for persistence (current behavior)
     if (user) {
-      if (user.otpLastSentAt && now - user.otpLastSentAt < 60 * 1000) {
-        return res.status(429).json({ message: "OTP recently sent — try again in a moment" });
+      const last = user.otpLastSentAt ? new Date(user.otpLastSentAt).getTime() : 0;
+      const diff = now - last;
+      if (last && diff < COOLDOWN_MS) {
+        const retryAfter = Math.ceil((COOLDOWN_MS - diff) / 1000);
+        return res.status(429).json({ message: "OTP recently sent — try again in a moment", retryAfter });
       }
 
       const otp = String(Math.floor(100000 + Math.random() * 900000));
       user.emailOtp = otp;
-      user.emailOtpExpires = new Date(now + 2 * 60 * 1000);
+      user.emailOtpExpires = new Date(now + OTP_TTL_MS);
       user.emailOtpAttempts = 0;
       user.otpLastSentAt = now;
       await user.save();
@@ -328,20 +333,21 @@ router.post("/send-email-otp", async (req, res) => {
         html: `<p>Your verification code is: <strong>${otp}</strong>. It expires in 2 minutes.</p>`,
       });
 
-      console.log("OTP stored on user doc for", email, otp);
-      return res.json({ ok: true, message: "OTP sent to email", where: "user-doc" });
+      console.log("send-email-otp called for (user):", email);
+      return res.json({ ok: true, message: "OTP sent to email" });
     }
 
-    // if user NOT found — store OTP in-memory (dev) or in DB (prod)
+    // fallback: in-memory store (dev)
     const existing = otpStore.get(email);
-    if (existing && now - existing.lastSentAt < 60 * 1000) {
-      return res.status(429).json({ message: "OTP recently sent — try again in a moment" });
+    if (existing && now - existing.lastSentAt < COOLDOWN_MS) {
+      const retryAfter = Math.ceil((COOLDOWN_MS - (now - existing.lastSentAt)) / 1000);
+      return res.status(429).json({ message: "OTP recently sent — try again in a moment", retryAfter, where: "otpStore" });
     }
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     otpStore.set(email, {
       otp,
-      expires: now + 2 * 60 * 1000,
+      expires: now + OTP_TTL_MS,
       attempts: 0,
       lastSentAt: now,
     });
@@ -353,8 +359,8 @@ router.post("/send-email-otp", async (req, res) => {
       html: `<p>Your verification code is: <strong>${otp}</strong>. It expires in 2 minutes.</p>`,
     });
 
-    console.log("OTP stored in otpStore for", email, otp);
-    return res.json({ ok: true, message: "OTP sent to email", where: "otpStore" });
+    console.log("send-email-otp called for (otpStore):", email, otp);
+    return res.json({ ok: true, message: "OTP sent to email" });
   } catch (err) {
     console.error("🔥 send-email-otp error:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
