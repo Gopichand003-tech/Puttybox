@@ -24,6 +24,8 @@ const transporter = nodemailer.createTransport({
 console.log("Email user:", process.env.EMAIL_USER);
 console.log("Email pass:", process.env.EMAIL_PASS ? "Loaded ✅" : "Missing ❌");
 
+const otpStore = new Map();
+
 // -------------------- HELPER: SET COOKIE --------------------
 const setTokenCookie = (res, token) => {
   res.cookie("token", token, {
@@ -286,6 +288,168 @@ router.post("/reset-password/:token", async (req, res) => {
     res.json({ message: "Password reset successful" });
   } catch (err) {
     res.status(400).json({ message: "Invalid or expired token" });
+  }
+});
+
+//Email
+//Email
+router.post("/send-email-otp", async (req, res) => {
+  try {
+    const rawEmail = req.body.email;
+    const email = (rawEmail || "").toString().trim().toLowerCase();
+
+    console.log("send-email-otp called for:", JSON.stringify(email));
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ message: "Valid email required" });
+    }
+
+    const now = Date.now();
+
+    // rate limit via otpStore (fallback) OR via user doc if exists
+    const user = await User.findOne({ email });
+
+    // if user exists, use user doc fields for persistence (current behavior)
+    if (user) {
+      if (user.otpLastSentAt && now - user.otpLastSentAt < 60 * 1000) {
+        return res.status(429).json({ message: "OTP recently sent — try again in a moment" });
+      }
+
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      user.emailOtp = otp;
+      user.emailOtpExpires = new Date(now + 2 * 60 * 1000);
+      user.emailOtpAttempts = 0;
+      user.otpLastSentAt = now;
+      await user.save();
+
+      await transporter.sendMail({
+        from: `"Support" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Your verification code",
+        html: `<p>Your verification code is: <strong>${otp}</strong>. It expires in 2 minutes.</p>`,
+      });
+
+      console.log("OTP stored on user doc for", email, otp);
+      return res.json({ ok: true, message: "OTP sent to email", where: "user-doc" });
+    }
+
+    // if user NOT found — store OTP in-memory (dev) or in DB (prod)
+    const existing = otpStore.get(email);
+    if (existing && now - existing.lastSentAt < 60 * 1000) {
+      return res.status(429).json({ message: "OTP recently sent — try again in a moment" });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    otpStore.set(email, {
+      otp,
+      expires: now + 2 * 60 * 1000,
+      attempts: 0,
+      lastSentAt: now,
+    });
+
+    await transporter.sendMail({
+      from: `"Support" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your verification code",
+      html: `<p>Your verification code is: <strong>${otp}</strong>. It expires in 2 minutes.</p>`,
+    });
+
+    console.log("OTP stored in otpStore for", email, otp);
+    return res.json({ ok: true, message: "OTP sent to email", where: "otpStore" });
+  } catch (err) {
+    console.error("🔥 send-email-otp error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+
+// -------------------- VERIFY EMAIL OTP --------------------
+router.post("/verify-email-otp", async (req, res) => {
+  try {
+    const rawEmail = req.body.email;
+    const email = (rawEmail || "").toString().trim().toLowerCase();
+    const otp = String(req.body.otp || "").trim();
+
+    console.log("verify-email-otp called for:", JSON.stringify(email), "otp:", otp ? "***" : "(empty)");
+
+    if (!email || !otp) return res.status(400).json({ message: "Missing fields" });
+
+    const user = await User.findOne({ email });
+
+    // If user exists: verify against fields stored on user doc
+    if (user && (user.emailOtp || user.emailOtpExpires)) {
+      console.log("Found user doc. user.emailOtpExists:", !!user.emailOtp, "expires:", user.emailOtpExpires);
+
+      // If no OTP was requested
+      if (!user.emailOtp || !user.emailOtpExpires) {
+        return res.status(400).json({ message: "No OTP requested for this email", where: "user-doc" });
+      }
+
+      // Expiry check
+      if (new Date() > new Date(user.emailOtpExpires)) {
+        // cleanup
+        user.emailOtp = undefined;
+        user.emailOtpExpires = undefined;
+        user.emailOtpAttempts = undefined;
+        await user.save();
+        return res.status(400).json({ message: "OTP expired", where: "user-doc" });
+      }
+
+      // Brute-force protection
+      user.emailOtpAttempts = (user.emailOtpAttempts || 0) + 1;
+      if (user.emailOtpAttempts > 5) {
+        // clean up and force retry after expiry
+        user.emailOtp = undefined;
+        user.emailOtpExpires = undefined;
+        user.emailOtpAttempts = undefined;
+        await user.save();
+        return res.status(429).json({ message: "Too many attempts - request a new OTP", where: "user-doc" });
+      }
+
+      // Validate OTP
+      if (String(otp).trim() !== String(user.emailOtp).trim()) {
+        await user.save(); // persist incremented attempts
+        return res.status(400).json({ message: "Invalid OTP", where: "user-doc" });
+      }
+
+      // Success — clear OTP fields and optionally mark email verified
+      user.emailOtp = undefined;
+      user.emailOtpExpires = undefined;
+      user.emailOtpAttempts = undefined;
+      user.otpLastSentAt = undefined;
+      // OPTIONAL: user.emailVerified = true;
+      await user.save();
+
+      return res.json({ ok: true, message: "Verified", where: "user-doc" });
+    } else {
+      // fallback to in-memory otpStore
+      console.log("No user or no OTP on user doc; checking otpStore for", email);
+      const rec = otpStore.get(email);
+      if (!rec) return res.status(400).json({ message: "No OTP requested for this email", where: "otpStore" });
+
+      if (Date.now() > rec.expires) {
+        otpStore.delete(email);
+        return res.status(400).json({ message: "OTP expired", where: "otpStore" });
+      }
+
+      rec.attempts = (rec.attempts || 0) + 1;
+      if (rec.attempts > 5) {
+        otpStore.delete(email);
+        return res.status(429).json({ message: "Too many attempts - request a new OTP", where: "otpStore" });
+      }
+
+      if (String(otp).trim() !== String(rec.otp).trim()) {
+        // persist attempt count
+        otpStore.set(email, rec);
+        return res.status(400).json({ message: "Invalid OTP", where: "otpStore" });
+      }
+
+      // success
+      otpStore.delete(email);
+      return res.json({ ok: true, message: "Verified", where: "otpStore" });
+    }
+  } catch (err) {
+    console.error("🔥 verify-email-otp error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
