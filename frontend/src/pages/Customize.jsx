@@ -87,14 +87,6 @@ export default function Customize() {
   const [landmark, setLandmark] = useState("");
   // phone contact state
 const [contact, setContact] = useState("");
-  // Email OTP states 
-const [email, setEmail] = useState("");
-const [emailOtp, setEmailOtp] = useState("");
-const [emailOtpSent, setEmailOtpSent] = useState(false);
-const [emailVerified, setEmailVerified] = useState(false);
-const [emailOtpError, setEmailOtpError] = useState(false);
-const [emailTimer, setEmailTimer] = useState(0); // seconds left for resend
-
 
   // ✅ Missing state added here
   const [loading, setLoading] = useState(false);
@@ -112,118 +104,6 @@ const [emailTimer, setEmailTimer] = useState(0); // seconds left for resend
     newSet.has(meal) ? newSet.delete(meal) : newSet.add(meal);
     setMealType(newSet);
   };
-
-  // const handleSendOTP = () => {
-  //   if (contact.length === 10) {
-  //     setOtpSent(true);
-  //     toast.success(`OTP sent to +91 ${contact}`);
-  //   } else {
-  //     toast.error("Enter a valid 10-digit number");
-  //   }
-  // };
-
-  // const handleVerifyOTP = () => {
-  //   if (otp === "123456") {
-  //     setVerified(true);
-  //     setOtpError(false);
-  //     toast.success("Phone verified ✅");
-  //   } else {
-  //     setVerified(false);
-  //     setOtpError(true);
-  //     toast.error("Invalid OTP ❌");
-  //   }
-  // };
-
-  // Start resend countdown (seconds)
-const startEmailTimer = (secs = 120) => {
-  setEmailTimer(secs);
-  const iv = setInterval(() => {
-    setEmailTimer((s) => {
-      if (s <= 1) {
-        clearInterval(iv);
-        return 0;
-      }
-      return s - 1;
-    });
-  }, 1000);
-};
-// inside Customize.jsx
-
-// helper normalize
-const normalizeEmail = (raw) => (raw || "").toString().trim().toLowerCase();
-
-// Send OTP
-const handleSendEmailOTP = async () => {
-  const normalized = normalizeEmail(email);
-  if (!normalized || !/^\S+@\S+\.\S+$/.test(normalized)) {
-    toast.error("Please enter a valid email address");
-    return;
-  }
-  try {
-    setLoading(true);
-    const { data } = await axios.post(
-      `${API_URL}/api/auth/send-email-otp`,
-      { email: normalized },
-      { withCredentials: false } // set to true only if you need cookies
-    );
-
-    setEmailOtpSent(!!data?.ok);
-    setEmailOtpError(false);
-    setEmailVerified(false);
-    startEmailTimer(120);
-    toast.success(data?.message || `OTP sent to ${normalized}`);
-    console.log("send-email-otp response:", data);
-  } catch (err) {
-    console.error("send email otp:", err);
-    toast.error(err?.response?.data?.message || "Failed to send OTP");
-  } finally {
-    setLoading(false);
-  }
-};
-
-// Verify OTP
-const handleVerifyEmailOTP = async () => {
-  const normalized = normalizeEmail(email);
-  if (!emailOtp || emailOtp.length < 4) {
-    toast.error("Enter the OTP sent to your email");
-    return;
-  }
-  try {
-    setLoading(true);
-    const { data } = await axios.post(
-      `${API_URL}/api/auth/verify-email-otp`,
-      { email: normalized, otp: emailOtp },
-      { withCredentials: false }
-    );
-
-    console.log("verify response:", data);
-    if (data?.ok) {
-      setEmailVerified(true);
-      setEmailOtpError(false);
-      toast.success("Email verified ✅");
-    } else {
-      setEmailVerified(false);
-      setEmailOtpError(true);
-      toast.error(data?.message || "Invalid OTP ❌");
-    }
-  } catch (err) {
-    console.error("verify email otp error:", err);
-    if (err.response) {
-      console.error("server status:", err.response.status, err.response.data);
-      toast.error(err.response.data?.message || "OTP verification failed");
-    } else {
-      toast.error(err.message || "Network error");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-// if (!emailVerified) {
-//   toast.warning("Please verify your email to continue.", { position: "top-center" });
-//   return;
-// }
 
 
 
@@ -794,63 +674,6 @@ const handleVerifyEmailOTP = async () => {
       </div>
     </div>
 
-    {/* ── Email OTP ── */}
-    <div className="mt-6">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Email for Receipts & OTP</label>
-
-      <div className="flex items-center border-2 border-emerald-100 rounded-2xl bg-white shadow-inner focus-within:ring-2 focus-within:ring-emerald-400 overflow-hidden">
-        <input
-          type="email"
-          placeholder="Enter email address"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-          }}
-          className="flex-1 px-4 py-3 bg-transparent outline-none text-emerald-900 placeholder-gray-400 text-sm sm:text-base"
-        />
-
-        {emailOtpSent ? (
-          <button
-            onClick={() => {
-              if (emailTimer === 0) handleSendEmailOTP();
-            }}
-            className={`px-3 py-2 text-sm font-semibold ${emailTimer > 0 ? "text-gray-400 cursor-not-allowed" : "text-orange-600 hover:text-orange-700"}`}
-            disabled={emailTimer > 0}
-          >
-            {emailTimer > 0 ? `Resend (${emailTimer}s)` : "Resend OTP"}
-          </button>
-        ) : (
-          <button onClick={handleSendEmailOTP} className="px-3 py-2 text-sm font-semibold text-orange-600 hover:text-orange-700">
-            Send OTP
-          </button>
-        )}
-      </div>
-
-      {/* OTP input after sent */}
-      {emailOtpSent && (
-        <div className="mt-3 flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Enter email OTP"
-            value={emailOtp}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, "");
-              if (val.length <= 6) setEmailOtp(val);
-            }}
-            className="flex-1 px-3 py-2 border-2 border-orange-200 rounded-xl shadow-inner focus:ring-2 focus:ring-orange-400 text-base"
-          />
-          <button onClick={handleVerifyEmailOTP} className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white rounded-xl font-semibold">
-            Verify
-          </button>
-        </div>
-      )}
-
-      {/* status */}
-      {emailVerified && <p className="mt-2 text-green-600 font-medium flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Email verified</p>}
-      {emailOtpError && <p className="mt-2 text-red-600 font-medium flex items-center gap-2"><XCircle className="w-4 h-4" /> Invalid OTP</p>}
-      {!emailVerified && !emailOtpSent && <p className="mt-2 text-gray-500 text-sm">We will send a one-time code to verify this email (2 minutes expiry).</p>}
-    </div>
-
     {/* Navigation Buttons */}
     <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-10 mt-6 sm:mt-12">
       <button
@@ -860,52 +683,45 @@ const handleVerifyEmailOTP = async () => {
         ← Back
       </button>
 
-      {/* Continue Button shown only when email verified */}
-      {emailVerified && (
-        <button
-          onClick={() => {
-            // Validate Area Selection
-            if (!address || !vijayawadaAreas.includes(address)) {
-              toast.error("❌ Delivery is available only in Vijayawada areas.", {
-                duration: 4000,
-                position: "top-center",
-                style: {
-                  background: "#ffe4e6",
-                  color: "#b91c1c",
-                  fontWeight: "600",
-                  border: "1px solid #fecaca",
-                },
-              });
-              return;
-            }
+      {/* Continue Button always visible */}
+      <button
+        onClick={() => {
+          // Validate Area Selection
+          if (!address || !vijayawadaAreas.includes(address)) {
+            toast.error("❌ Delivery is available only in Vijayawada areas.", {
+              duration: 4000,
+              position: "top-center",
+              style: {
+                background: "#ffe4e6",
+                color: "#b91c1c",
+                fontWeight: "600",
+                border: "1px solid #fecaca",
+              },
+            });
+            return;
+          }
 
-            // Validate Contact Number only if provided
-            if (contact && contact.length !== 10) {
-              toast.warning("⚠️ If you entered a mobile number, it must be 10 digits.", {
-                duration: 4000,
-                position: "top-center",
-                style: {
-                  background: "#fff8e1",
-                  color: "#b45309",
-                  fontWeight: "600",
-                  border: "1px solid #fde68a",
-                },
-              });
-              return;
-            }
+          // Validate Contact Number only if provided
+          if (contact && contact.length !== 10) {
+            toast.warning("⚠️ If you entered a mobile number, it must be 10 digits.", {
+              duration: 4000,
+              position: "top-center",
+              style: {
+                background: "#fff8e1",
+                color: "#b45309",
+                fontWeight: "600",
+                border: "1px solid #fde68a",
+              },
+            });
+            return;
+          }
 
-            nextStep();
-          }}
-          className="px-8 py-2 bg-gradient-to-r from-orange-500 to-amber-400 text-white rounded-full font-semibold shadow-lg hover:scale-105 transition-all mt-2"
-        >
-          Continue →
-        </button>
-      )}
-
-      {/* Disabled Hint (If Not Verified Yet) */}
-      {!emailVerified && (
-        <p className="text-center text-gray-500 text-sm mt-4">⚠️ Please verify your Email to continue.</p>
-      )}
+          nextStep();
+        }}
+        className="px-8 py-2 bg-gradient-to-r from-orange-500 to-amber-400 text-white rounded-full font-semibold shadow-lg hover:scale-105 transition-all mt-2"
+      >
+        Continue →
+      </button>
     </div>
   </motion.div>
 )}

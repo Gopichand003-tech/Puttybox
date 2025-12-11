@@ -1,50 +1,57 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { OAuth2Client } from "google-auth-library";
-import  protect  from "../Middleware/authMiddleware.js"; // ✅ must use named import
-import nodemailer from "nodemailer";
-import { setPremium, upgradeToPremium , activatePremium , checkPremiumStatus} from "../controller/userController.js"; // ✅ combine import
-import dotenv from "dotenv";
+import protect from "../Middleware/authMiddleware.js"; // ✅ must use named import
+import { setPremium, upgradeToPremium, activatePremium, checkPremiumStatus } from "../controller/userController.js";
 import sgMail from "@sendgrid/mail";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-dotenv.config();
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
 
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// -------------------- EMAIL SETUP --------------------
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-console.log("Email user:", process.env.EMAIL_USER);
-console.log("Email pass:", process.env.EMAIL_PASS ? "Loaded ✅" : "Missing ❌");
-
-const otpStore = new Map();
-
-// -------------------- HELPER: SET COOKIE --------------------
+// ---------------- helper: set cookie ----------------
 const setTokenCookie = (res, token) => {
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // true only on Render
+    secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
 
+// ---------------- helper: send via SendGrid with limited retry ----------------
+async function sendEmailWithRetry({ to, from, subject, text, html }, attempts = 3) {
+  const msg = { to, from, subject, text, html };
+  let delay = 500;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await sgMail.send(msg); // returns array
+      console.log("SendGrid send status:", res && res[0] && res[0].statusCode);
+      return { ok: true, result: res };
+    } catch (err) {
+      console.error("SendGrid error status:", err?.response?.statusCode);
+      console.error("SendGrid error body:", JSON.stringify(err?.response?.body || err.message));
+      const status = err?.response?.statusCode || 0;
+      if ((status === 429 || (status >= 500 && status < 600)) && i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, delay));
+        delay *= 2;
+        continue;
+      }
+      return { ok: false, error: err };
+    }
+  }
+}
 
 // -------------------- PREMIUM ROUTES --------------------
 router.post("/premium", protect, setPremium);
 router.post("/upgrade-premium", protect, upgradeToPremium);
-router.post("/activatePremium", protect , activatePremium);
+router.post("/activatePremium", protect, activatePremium);
 router.get(["/checkPremiumStatus", "/checkPremiumStatus/:userId"], protect, checkPremiumStatus);
 
 // -------------------- REGISTER --------------------
@@ -53,8 +60,7 @@ router.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ name, email, password: hashedPassword });
@@ -85,47 +91,38 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password)
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
+    if (!email || !password) return res.status(400).json({ message: "Email and password are required" });
 
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    // ✅ Clear old cookie first — works in both local and production
-res.clearCookie("token", {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // only secure on production
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-});
-
-
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    
     setTokenCookie(res, token);
 
     res.status(200).json({
       message: "Login successful",
-     user: {
-  id: user._id,
-  name: user.name,
-  email: user.email,
-  profilePic: user.profilePic || "",
-  provider: user.provider || "local",
-  isPremium: user.isPremium,
-  premiumSince: user.premiumSince,
-  premiumExpiry: user.premiumExpiry,
-},
-
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        profilePic: user.profilePic || "",
+        provider: user.provider || "local",
+        isPremium: user.isPremium,
+        premiumSince: user.premiumSince,
+        premiumExpiry: user.premiumExpiry,
+      },
     });
   } catch (error) {
     console.error(error);
@@ -155,33 +152,27 @@ router.post("/google-login", async (req, res) => {
       });
     }
 
-    // ✅ Clear old cookie first — works in both local and production
-res.clearCookie("token", {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // only secure on production
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-});
-
-
-
-    const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
+
+    const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     setTokenCookie(res, jwtToken);
 
     res.json({
       user: {
-  id: user._id,
-  name: user.name,
-  email: user.email,
-  profilePic: user.profilePic || "",
-  provider: user.provider || "google",
-  isPremium: user.isPremium,
-  premiumSince: user.premiumSince,
-  premiumExpiry: user.premiumExpiry,
-},
-
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        profilePic: user.profilePic || "",
+        provider: user.provider || "google",
+        isPremium: user.isPremium,
+        premiumSince: user.premiumSince,
+        premiumExpiry: user.premiumExpiry,
+      },
     });
   } catch (err) {
     console.error("Google login error:", err);
@@ -198,7 +189,7 @@ router.post("/logout", (req, res) => {
   res.json({ message: "Logged out successfully" });
 });
 
-// backend/routes/authRoute.js (or similar)
+// -------------------- me --------------------
 router.get("/me", async (req, res) => {
   try {
     const token = req.cookies.token;
@@ -208,12 +199,11 @@ router.get("/me", async (req, res) => {
     const user = await User.findById(decoded.id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json({ user }); // ✅ Important: send full user object here
+    res.json({ user });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
-
 
 // -------------------- CHANGE PASSWORD --------------------
 router.put("/change-password", protect, async (req, res) => {
@@ -222,14 +212,10 @@ router.put("/change-password", protect, async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user.password)
-      return res
-        .status(400)
-        .json({ message: "No password set for this account" });
+    if (!user.password) return res.status(400).json({ message: "No password set for this account" });
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Old password is incorrect" });
+    if (!isMatch) return res.status(400).json({ message: "Old password is incorrect" });
 
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
@@ -247,34 +233,32 @@ router.post("/forgot-password", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "10m",
-    });
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "10m" });
     const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    const mailOptions = {
-      from: `"Support" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Password Reset Request",
-      html: `
-        <p>Hello ${user.name},</p>
-        <p>Click below to reset your password (valid 10 min):</p>
-        <a href="${resetLink}" target="_blank">${resetLink}</a>
-      `,
-    };
+    const from = process.env.SENDGRID_FROM || process.env.EMAIL_USER;
+    const subject = "Password Reset Request";
+    const html = `
+      <p>Hello ${user.name},</p>
+      <p>Click below to reset your password (valid 10 min):</p>
+      <a href="${resetLink}" target="_blank">${resetLink}</a>
+    `;
 
-    await transporter.sendMail(mailOptions);
+    const sent = await sendEmailWithRetry({ to: email, from, subject, html, text: `Reset link: ${resetLink}` });
+
+    if (!sent.ok) {
+      console.error("🔥 Forgot Password Send failed:", sent.error);
+      const status = sent.error?.response?.statusCode;
+      if (status === 429) return res.status(429).json({ message: "Email provider rate limit, try later" });
+      return res.status(500).json({ message: "Failed to send password reset email" });
+    }
+
     res.json({ message: "Password reset email sent" });
   } catch (err) {
     console.error("🔥 Forgot Password Error:", err);
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-      stack: err.stack,
-    });
+    res.status(500).json({ message: "Server error", error: err.message, stack: err.stack });
   }
 });
-
 
 // -------------------- RESET PASSWORD --------------------
 router.post("/reset-password/:token", async (req, res) => {
@@ -292,170 +276,6 @@ router.post("/reset-password/:token", async (req, res) => {
     res.json({ message: "Password reset successful" });
   } catch (err) {
     res.status(400).json({ message: "Invalid or expired token" });
-  }
-});
-
-//Email
-// send-email-otp improved
-router.post("/send-email-otp", async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      return res.status(400).json({ message: "Valid email required" });
-    }
-
-    const now = Date.now();
-    const COOLDOWN_MS = 60 * 1000; // 60s
-    const OTP_TTL_MS = 2 * 60 * 1000; // 2min
-
-    // Use DB user if exists
-    const user = await User.findOne({ email });
-
-    if (user) {
-      const last = user.otpLastSentAt ? new Date(user.otpLastSentAt).getTime() : 0;
-      const diff = now - last;
-      if (last && diff < COOLDOWN_MS) {
-        const retryAfter = Math.ceil((COOLDOWN_MS - diff) / 1000);
-        return res.status(429).json({ message: "OTP recently sent — try again in a moment", retryAfter });
-      }
-
-      const otp = String(Math.floor(100000 + Math.random() * 900000));
-      user.emailOtp = otp;
-      user.emailOtpExpires = new Date(now + OTP_TTL_MS);
-      user.emailOtpAttempts = 0;
-      user.otpLastSentAt = now;
-      await user.save();
-
-      await transporter.sendMail({
-        from: `"Support" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Your verification code",
-        html: `<p>Your verification code is: <strong>${otp}</strong>. It expires in 2 minutes.</p>`,
-      });
-
-      console.log("send-email-otp called for (user):", email);
-      return res.json({ ok: true, message: "OTP sent to email" });
-    }
-
-    // fallback: in-memory store (dev)
-    const existing = otpStore.get(email);
-    if (existing && now - existing.lastSentAt < COOLDOWN_MS) {
-      const retryAfter = Math.ceil((COOLDOWN_MS - (now - existing.lastSentAt)) / 1000);
-      return res.status(429).json({ message: "OTP recently sent — try again in a moment", retryAfter, where: "otpStore" });
-    }
-
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    otpStore.set(email, {
-      otp,
-      expires: now + OTP_TTL_MS,
-      attempts: 0,
-      lastSentAt: now,
-    });
-
-    await transporter.sendMail({
-      from: `"Support" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Your verification code",
-      html: `<p>Your verification code is: <strong>${otp}</strong>. It expires in 2 minutes.</p>`,
-    });
-
-    console.log("send-email-otp called for (otpStore):", email, otp);
-    return res.json({ ok: true, message: "OTP sent to email" });
-  } catch (err) {
-    console.error("🔥 send-email-otp error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-
-// -------------------- VERIFY EMAIL OTP --------------------
-router.post("/verify-email-otp", async (req, res) => {
-  try {
-    const rawEmail = req.body.email;
-    const email = (rawEmail || "").toString().trim().toLowerCase();
-    const otp = String(req.body.otp || "").trim();
-
-    console.log("verify-email-otp called for:", JSON.stringify(email), "otp:", otp ? "***" : "(empty)");
-
-    if (!email || !otp) return res.status(400).json({ message: "Missing fields" });
-
-    const user = await User.findOne({ email });
-
-    // If user exists: verify against fields stored on user doc
-    if (user && (user.emailOtp || user.emailOtpExpires)) {
-      console.log("Found user doc. user.emailOtpExists:", !!user.emailOtp, "expires:", user.emailOtpExpires);
-
-      // If no OTP was requested
-      if (!user.emailOtp || !user.emailOtpExpires) {
-        return res.status(400).json({ message: "No OTP requested for this email", where: "user-doc" });
-      }
-
-      // Expiry check
-      if (new Date() > new Date(user.emailOtpExpires)) {
-        // cleanup
-        user.emailOtp = undefined;
-        user.emailOtpExpires = undefined;
-        user.emailOtpAttempts = undefined;
-        await user.save();
-        return res.status(400).json({ message: "OTP expired", where: "user-doc" });
-      }
-
-      // Brute-force protection
-      user.emailOtpAttempts = (user.emailOtpAttempts || 0) + 1;
-      if (user.emailOtpAttempts > 5) {
-        // clean up and force retry after expiry
-        user.emailOtp = undefined;
-        user.emailOtpExpires = undefined;
-        user.emailOtpAttempts = undefined;
-        await user.save();
-        return res.status(429).json({ message: "Too many attempts - request a new OTP", where: "user-doc" });
-      }
-
-      // Validate OTP
-      if (String(otp).trim() !== String(user.emailOtp).trim()) {
-        await user.save(); // persist incremented attempts
-        return res.status(400).json({ message: "Invalid OTP", where: "user-doc" });
-      }
-
-      // Success — clear OTP fields and optionally mark email verified
-      user.emailOtp = undefined;
-      user.emailOtpExpires = undefined;
-      user.emailOtpAttempts = undefined;
-      user.otpLastSentAt = undefined;
-      // OPTIONAL: user.emailVerified = true;
-      await user.save();
-
-      return res.json({ ok: true, message: "Verified", where: "user-doc" });
-    } else {
-      // fallback to in-memory otpStore
-      console.log("No user or no OTP on user doc; checking otpStore for", email);
-      const rec = otpStore.get(email);
-      if (!rec) return res.status(400).json({ message: "No OTP requested for this email", where: "otpStore" });
-
-      if (Date.now() > rec.expires) {
-        otpStore.delete(email);
-        return res.status(400).json({ message: "OTP expired", where: "otpStore" });
-      }
-
-      rec.attempts = (rec.attempts || 0) + 1;
-      if (rec.attempts > 5) {
-        otpStore.delete(email);
-        return res.status(429).json({ message: "Too many attempts - request a new OTP", where: "otpStore" });
-      }
-
-      if (String(otp).trim() !== String(rec.otp).trim()) {
-        // persist attempt count
-        otpStore.set(email, rec);
-        return res.status(400).json({ message: "Invalid OTP", where: "otpStore" });
-      }
-
-      // success
-      otpStore.delete(email);
-      return res.json({ ok: true, message: "Verified", where: "otpStore" });
-    }
-  } catch (err) {
-    console.error("🔥 verify-email-otp error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
