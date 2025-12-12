@@ -1,15 +1,15 @@
 // src/pages/MealPlansPage.jsx
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence, color } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingCart,
   Activity,
   Leaf,
   Scale,
   Dumbbell,
-  UtensilsIcon,
   List,
   Truck,
+  Utensils,
 } from "lucide-react";
 import Header from "../components/Header";
 import { useNavigate, useParams } from "react-router-dom";
@@ -111,7 +111,7 @@ export default function MealPlansPage() {
         setTimeout(() => {
           const el = document.getElementById(`plan-${plan.id}`);
           if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 100);
+        }, 120);
       }
     }
   }, [type]);
@@ -125,182 +125,194 @@ export default function MealPlansPage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-gray-200 text-gray-900 font-sans overflow-x-hidden relative">
       <Header />
 
-     {/* Hero Section */}
-<motion.section
-  initial={{ opacity: 0, y: 50 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.8 }}
-  className="flex flex-col-reverse md:flex-row items-center justify-between px-10 md:px-20 py-16 md:py-24 bg-gradient-to-br from-green-100 via-white to-gray-100"
->
-  {/* Text Side */}
-  <motion.div
-    initial={{ x: -60, opacity: 0 }}
-    animate={{ x: 0, opacity: 1 }}
-    transition={{ duration: 0.8 }}
-    className="max-w-2xl md:pr-10"
-  >
-   <h1 className="text-6xl md:text-9xl font-extrabold text-gray-900 mb-6 leading-tight ml-4 md:ml-10">
-  Discover Your <br />
-  <span className="text-green-500 drop-shadow-md">Perfect Plan</span>
-</h1>
-<p className="text-gray-800 text-xl md:text-2xl mb-9 leading-relaxed ml-2 md:ml-10">
-  Choose a meal plan that matches your goals — keto, protein-rich,
-  plant-based, or weight-loss focused.
-</p>
-
-
-    {/* Call-to-Action Buttons */}
-    <motion.div className="flex flex-wrap gap-2">
-      <motion.button
-       onClick={() => navigate("/customize")}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="px-6 py-3 bg-green-500 text-white font-semibold rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 ml-2 md:ml-10"
+      {/* Hero Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        className="flex flex-col-reverse md:flex-row items-center justify-between px-6 sm:px-10 md:px-16 lg:px-20 py-12 md:py-20 bg-gradient-to-br from-green-100 via-white to-gray-100"
       >
-        
-       <div className="flex items-center gap-2">
-  <FaMoneyBill className="w-5 h-5" />
-  <span>Membership</span>
-</div>
+        {/* Text Side */}
+        <motion.div
+          initial={{ x: -30, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="w-full md:w-1/2 max-w-2xl"
+        >
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 md:mb-6 leading-tight">
+            Discover Your <br />
+            <span className="text-green-500 drop-shadow-sm">Perfect Plan</span>
+          </h1>
 
-      </motion.button>
-      <motion.button
-       onClick={() => navigate("/Order-history")}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="px-6 py-3 bg-white border-2 border-green-500 text-green-600 font-semibold rounded-full shadow hover:shadow-md transition-all duration-300 ml-2 md:ml-10"
-      >
-        <div className="flex items-center gap-2">
-  <Truck className="w-5 h-5" />
-  <span>Order history</span>
-</div>
-      </motion.button>
-    </motion.div>
-  </motion.div>
+          <p className="text-gray-800 text-base sm:text-lg md:text-xl mb-6">
+            Choose a meal plan that matches your goals — keto, protein-rich,
+            plant-based, or weight-loss focused.
+          </p>
 
-  {/* Video Side */}
-  <motion.div
-    initial={{ x: 60, opacity: 0 }}
-    animate={{ x: 0, opacity: 1 }}
-    transition={{ duration: 0.8 }}
-    className="w-full md:w-1/2 flex justify-center mb-10 md:mb-0"
-  >
-    <div className="w-98 h-94 md:w-135 md:h-135 object-cover rounded-full overflow-hidden shadow-2xl border-4 border-gray-200">
-      <video
-        src="/menupage2.mp4" // Replace with your video path
-        autoPlay
-        muted
-        loop
-        className="w-full h-full object-cover"
-      ></video>
-    </div>
-  </motion.div>
-</motion.section>
+          {/* CTAs */}
+          <div className="flex flex-wrap gap-3">
+            <motion.button
+              onClick={() => navigate("/customize")}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="px-5 py-2.5 bg-green-500 text-white font-semibold rounded-full shadow-md hover:shadow-lg transition"
+              aria-label="Membership"
+            >
+              <div className="flex items-center gap-2">
+                <FaMoneyBill className="w-4 h-4" />
+                <span className="text-sm sm:text-base">Membership</span>
+              </div>
+            </motion.button>
 
+            <motion.button
+              onClick={() => navigate("/Order-history")}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="px-5 py-2.5 bg-white border-2 border-green-500 text-green-600 font-semibold rounded-full shadow-sm hover:shadow-md transition"
+              aria-label="Order history"
+            >
+              <div className="flex items-center gap-2">
+                <Truck className="w-4 h-4" />
+                <span className="text-sm sm:text-base">Order history</span>
+              </div>
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Video Side */}
+        <motion.div
+          initial={{ x: 30, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="w-full md:w-1/2 flex justify-center mb-8 md:mb-0"
+        >
+          <div className="w-full max-w-md sm:max-w-lg md:max-w-xl rounded-full overflow-hidden shadow-2xl border-4 border-gray-200">
+            <video
+              src="/menupage2.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </motion.div>
+      </motion.section>
 
       {/* Category Buttons */}
-<motion.div
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  className="flex justify-center flex-wrap gap-4 mb-16 sticky top-20 z-40"
->
-  {categories.map((cat) => (
-    <motion.button
-      key={cat.name}
-      whileHover={{ scale: 1.08 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={() => setActiveCategory(cat.name)}
-      className={`px-6 py-2.5 rounded-full text-lg font-medium border transition-all duration-300 backdrop-blur-xl flex items-center gap-2 ${
-        activeCategory === cat.name
-          ? "bg-green-600 text-white border-green-600 shadow-lg scale-105"
-          : "bg-white/80 text-gray-800 border-gray-300 hover:bg-green-50 hover:border-green-400"
-      }`}
-    >
-      {cat.icon && React.createElement(cat.icon, { className: "w-5 h-5" })}
-      {cat.name}
-    </motion.button>
-  ))}
-</motion.div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex justify-center flex-wrap gap-3 my-8 sticky top-20 z-40 px-4"
+      >
+        {categories.map((cat) => (
+          <motion.button
+            key={cat.name}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setActiveCategory(cat.name)}
+            className={`px-4 sm:px-6 py-2.5 rounded-full text-sm sm:text-base font-medium border transition-all duration-250 backdrop-blur bg-white/60 flex items-center gap-2 ${
+              activeCategory === cat.name
+                ? "bg-green-600 text-white border-green-600 shadow-md scale-105"
+                : "text-gray-800 border-gray-200 hover:bg-green-50 hover:border-green-300"
+            }`}
+            aria-pressed={activeCategory === cat.name}
+          >
+            {cat.icon && React.createElement(cat.icon, { className: "w-4 h-4" })}
+            {cat.name}
+          </motion.button>
+        ))}
+      </motion.div>
 
       {/* Meal Plan Cards */}
-      <div className="relative space-y-40 px-6 sm:px-10 md:px-20 lg:px-32">
+      <div className="relative space-y-16 px-4 sm:px-8 md:px-12 lg:px-20 pb-24">
         <AnimatePresence>
-          {filteredPlans.map((plan, index) => (
+          {filteredPlans.map((plan) => (
             <motion.section
               key={plan.id}
               id={`plan-${plan.id}`}
-              initial={{ opacity: 0, y: 80 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.7 }}
               viewport={{ once: true }}
-              className={`relative flex flex-col md:flex-row items-center justify-between rounded-3xl shadow-2xl overflow-hidden`}
+              className="relative rounded-3xl overflow-hidden shadow-2xl"
               style={{
-                minHeight: "500px",
-                backgroundImage: `url(${plan.bgImage || plan.image})`,
+                minHeight: 420,
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.25)), url(${plan.bgImage || plan.image})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }}
             >
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/40"></div>
-
-              {/* Image Side */}
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                transition={{ duration: 0.4 }}
-                className="md:w-1/2 w-full relative z-10 p-6"
-              >
-                <img
-                  src={plan.image}
-                  alt={plan.name}
-                  // className="w-full h-[60vh] md:h-[70vh] object-cover rounded-4xl shadow-lg border-4 border-white/40"
-                  className="w-98 h-94 md:w-135 md:h-135 object-cover rounded-full border-7 border-white shadow-xl"
-
-                />
-              </motion.div>
-
-              {/* Content Side */}
-              <div className="md:w-1/2 w-full p-10 md:pr-16 relative z-10 text-white flex flex-col justify-center">
-                {/* Icon & Name */}
-                <motion.div className="flex items-center gap-5 mb-6">
-                  {plan.icon &&
-                    React.createElement(plan.icon, {
-                      size: 58,
-                      className: `${plan.iconColor} bg-white/70 p-3 rounded-full shadow-md`,
-                    })}
-                  <h2 className="text-4xl md:text-5xl font-extrabold bg-green-500/70 px-6 py-2 rounded-full shadow-lg">
-                    {plan.name} Plan
-                  </h2>
+              {/* Overlay handled via background gradient; still add fallback */}
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 items-center">
+                {/* Image Side */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.35 }}
+                  className="w-full p-6 flex items-center justify-center"
+                >
+                  <img
+                    src={plan.image}
+                    alt={plan.name}
+                    loading="lazy"
+                    className="w-44 h-44 sm:w-64 sm:h-64 md:w-72 md:h-72 object-cover rounded-full border-4 border-white/60 shadow-lg"
+                  />
                 </motion.div>
 
-                <p className="text-white/90 text-lg md:text-xl leading-relaxed mb-8">
-                  {plan.description}
-                </p>
+                {/* Content Side */}
+                <div className="w-full p-6 md:pr-12 text-white flex flex-col justify-center">
+                  <div className="flex items-center gap-4 mb-4">
+                    {plan.icon &&
+                      React.createElement(plan.icon, {
+                        size: 48,
+                        className: `${plan.iconColor} bg-white/80 p-3 rounded-full shadow`,
+                      })}
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold">
+                      {plan.name} Plan
+                    </h2>
+                  </div>
 
-                {/* Features */}
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-8">
-                  {plan.features.map((feature, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="bg-white/30 backdrop-blur-md rounded-xl px-4 py-3 text-white font-medium shadow-md"
+                  <p className="text-white/90 text-sm sm:text-base md:text-lg leading-relaxed mb-6">
+                    {plan.description}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                    {plan.features.map((feature, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 8 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.06 }}
+                        className="bg-white/20 backdrop-blur-md rounded-xl px-3 py-2 text-white text-sm font-medium"
+                      >
+                        {feature}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                    <motion.button
+                      onClick={() => navigate(`/select-meals/${plan.route}`)}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-full shadow-md"
+                      aria-label={`Select meals for ${plan.name}`}
                     >
-                      {feature}
-                    </motion.div>
-                  ))}
-                </div>
+                      <div className="flex items-center gap-2">
+                        <Utensils className="w-4 h-4" />
+                        <span className="text-sm">Select Meals</span>
+                      </div>
+                    </motion.button>
 
-                {/* CTA Button */}
-                <motion.button
-                  onClick={() => navigate(`/select-meals/${plan.route}`)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="mt-4 px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-full text-base shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
-                >
-                  <UtensilsIcon className="w-5 h-5" /> Select Meals
-                </motion.button>
+                    <button
+                      onClick={() => navigate(`/mealplan/${plan.route}`)}
+                      className="px-6 py-3 bg-white/90 text-gray-800 rounded-full shadow-sm"
+                      aria-label={`View ${plan.name} details`}
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
               </div>
             </motion.section>
           ))}
@@ -308,30 +320,14 @@ export default function MealPlansPage() {
       </div>
 
       {/* Quick Order Section */}
-      <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-20 px-6 text-center rounded-t-3xl shadow-inner mt-24">
-        <h2 className="text-4xl font-bold text-gray-800 mb-6">Quick Order</h2>
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-6 text-center rounded-t-3xl shadow-inner">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Quick Order</h2>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
           <button
             onClick={() => navigate("/quickorder")}
-            className="relative inline-flex items-center justify-center px-8 py-3 overflow-hidden font-bold text-emerald-600 border-2 border-emerald-500 rounded-xl transition-all duration-300 hover:bg-emerald-50 hover:shadow-md hover:scale-105 group"
+            className="inline-flex items-center gap-2 px-6 py-3 font-bold text-emerald-600 border-2 border-emerald-500 rounded-xl hover:bg-emerald-50 transition"
           >
-            <span className="relative flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5" /> Quick Order
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </span>
+            <ShoppingCart className="w-4 h-4" /> Quick Order
           </button>
         </motion.div>
       </section>
