@@ -191,9 +191,12 @@ export default function LoginPage() {
         alt="PUTTYBOX"
         className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
       />
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-green-500 to-black bg-clip-text text-transparent">
-        PUTTYBOX
-      </h1>
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide 
+               bg-gradient-to-r from-green-600 via-emerald-500 to-black 
+               bg-clip-text text-transparent">
+  PUTTYBOX
+</h1>
+
     </div>
 
     {/* Heading */}

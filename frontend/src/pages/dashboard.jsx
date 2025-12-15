@@ -186,13 +186,13 @@ const statusVideos = {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 transition-colors duration-500">
       <Header />
 
-<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 mt-16">
+<div  className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-10 mt-[72px]">
         {/* --- Tabs --- */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-6 px-1">
 
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm sm:text-base rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === "dashboard"
                 ? "bg-indigo-600 text-white shadow-md"
                 : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700"
@@ -219,12 +219,12 @@ const statusVideos = {
           <>
             {/* --- Welcome Section --- */}
             <div className="mb-10 text-center md:text-left">
-              <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white tracking-tight flex items-center justify-center md:justify-start gap-3">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold leading-tight text-gray-900 dark:text-white tracking-tight flex items-center justify-center md:justify-start gap-3">
                 Welcome back,{" "}
                 <span className="text-indigo-600 dark:text-indigo-400">
                   {user?.name || "Champion"}
                 </span>
-                <Handshake className="w-12 h-12 text-yellow-500 dark:text-indigo-400 animate-bounce mt-10" />
+                <Handshake className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-500 dark:text-indigo-400 animate-bounce mt-2 sm:mt-10" />
               </h1>
 
               <p className="text-lg text-gray-600 dark:text-gray-300 mt-3 max-w-2xl leading-relaxed mx-auto md:mx-0">
@@ -293,7 +293,7 @@ const statusVideos = {
             {/* --- Stats Cards --- */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
 
-              <div className="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-5 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-4 sm:p-5 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center gap-3">
                   <Crown className="text-yellow-500" size={28} />
                   <div>
@@ -419,13 +419,13 @@ const statusVideos = {
 
     {activeTab === "orders" && (
       <>
-       <div className="flex gap-3 mb-8 overflow-x-auto scrollbar-hide py-2">
+       <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide py-2">
 
           {["All", "pending", "confirmed", "cooking", "Out for Delivery"].map((tab) => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`px-5 py-2 text-sm rounded-full font-medium transition ${
+              className={`px-4 py-2 text-sm rounded-full font-medium transition whitespace-nowrap ${
                 filter === tab
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-gray-600"
@@ -498,10 +498,9 @@ const statusVideos = {
 </div>
 
 
-                   <div className="flex-shrink-0 w-full sm:w-auto flex flex-col sm:items-end items-start gap-3">
-
+<div className="w-full sm:w-auto flex flex-col items-start sm:items-end gap-3">
   {/* 💰 Price & Delivery Section */}
-  <div className="text-right">
+  <div className="text-left sm:text-right w-full">
     <div className="text-xl font-bold flex items-center justify-end gap-1 text-gray-900 dark:text-gray-100">
       <IndianRupee className="w-4 h-4 text-indigo-500" />
       {displayTotal}
@@ -550,7 +549,7 @@ const statusVideos = {
         exit={{ opacity: 0, y: -5 }}
         transition={{ duration: 0.3 }}
         onClick={() => handleCancelOrder(order._id)}
-        className="flex items-center justify-center gap-1 px-3 py-1 text-xs sm:text-sm rounded-full bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg transition-all"
+        className="flex items-center justify-center gap-1 px-4 py-2 text-sm rounded-full w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg transition-all"
       >
         <Timer className="w-4 h-4 animate-pulse" />
         Cancel ({Math.ceil(remaining / 1000)}s)
@@ -562,7 +561,7 @@ const statusVideos = {
                     </div>
 
   <div className="mt-6 flex justify-center">
-  <div className="relative w-36 h-36 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shadow-lg border-4 border-indigo-500/70 bg-white">
+  <div className="relative w-28 h-28 sm:w-40 sm:h-40 lg:w-56 lg:h-56 rounded-full overflow-hidden shadow-lg border-4 border-indigo-500/70 bg-white">
    <motion.video
   key={order.status}
   src={statusVideos[order.status?.toLowerCase()] || "/videos/default.mp4"}
@@ -682,7 +681,7 @@ const statusVideos = {
 
 
                   {/* Right section — price, status, and video */}
-                  <div className="flex flex-col items-end gap-3 text-right">
+                  <div className="flex flex-col items-start sm:items-end gap-3 text-left sm:text-right">
                     {/* 💰 Price */}
                     <div className="text-2xl font-semibold flex items-center gap-1 text-gray-900 dark:text-gray-100">
                       <IndianRupee className="w-4 h-4 text-indigo-500" />

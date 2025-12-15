@@ -2,12 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- Mobile viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- 🔥 FIX: Mobile browser background color -->
+    <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+
     <title>PUTTYBOX</title>
-       <link rel="icon" type="image/png" sizes="64x64" href="/puttylogo1.png">
+
+    <!-- App Icon -->
+    <link rel="icon" type="image/png" sizes="64x64" href="/puttylogo1.png">
   </head>
-  <body>
+
+  <body class="bg-gray-100 dark:bg-gray-900">
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
