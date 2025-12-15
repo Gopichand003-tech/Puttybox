@@ -220,4 +220,69 @@ router.post("/reorder/:orderId", protect, async (req, res) => {
   }
 });
 
+/* -------------------------------------------------
+   ❌ PUT /api/mealorder/:id/cancel
+   Cancel a scheduled / in-progress meal order
+-------------------------------------------------- */
+router.put("/:id/cancel", protect, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const order = await PlanOrder.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // 🔐 Ownership check
+    if (order.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "Unauthorized action" });
+    }
+
+    // ❌ Already delivered
+    if (order.status === "delivered") {
+      return res.status(400).json({
+        error: "Delivered orders cannot be cancelled",
+      });
+    }
+
+    // ❌ Already cancelled
+    if (order.status === "cancelled") {
+      return res.status(400).json({
+        error: "Order is already cancelled",
+      });
+    }
+
+    /* ⏱ OPTIONAL: Cancel time window (example: 3 minutes) */
+    const createdAt = new Date(order.createdAt).getTime();
+    const now = Date.now();
+    const diffMinutes = (now - createdAt) / (1000 * 60);
+
+    if (diffMinutes > 3) {
+      return res.status(400).json({
+        error: "Cancellation window expired",
+      });
+    }
+
+    // ✅ Cancel order
+    order.status = "cancelled";
+    await order.save();
+
+    // 🔔 Notify user
+    await sendNotification(
+      req,
+      userId,
+      `❌ Your ${order.planType} meal order has been cancelled successfully.`
+    );
+
+    res.json({
+      message: "✅ Order cancelled successfully",
+      order,
+    });
+  } catch (err) {
+    console.error("❌ Error cancelling meal order:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 export default router;

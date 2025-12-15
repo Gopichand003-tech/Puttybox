@@ -186,9 +186,10 @@ const statusVideos = {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 transition-colors duration-500">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-6 py-10 mt-15">
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 mt-16">
         {/* --- Tabs --- */}
-        <div className="flex justify-center mb-8 space-x-4">
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
+
           <button
             onClick={() => setActiveTab("dashboard")}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition ${
@@ -290,7 +291,8 @@ const statusVideos = {
             </div>
 
             {/* --- Stats Cards --- */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+
               <div className="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-5 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center gap-3">
                   <Crown className="text-yellow-500" size={28} />
@@ -384,9 +386,9 @@ const statusVideos = {
 
 {/* ORDERS & HISTORY TAB (with user details + delivery charges) */}
 {["orders", "history"].includes(activeTab) && (
-  <div className="bg-white/80 dark:bg-gray-800/90 p-8 rounded-2xl shadow-xl">
+  <div className="bg-white/80 dark:bg-gray-800/90 p-4 sm:p-6 lg:p-8 rounded-2xl shadow-xl">
     <div className="flex justify-between items-center mb-6">
-      <h2 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
         <CreditCard className="text-indigo-700" />
         {activeTab === "orders" ? "Active Orders" : "Order History"}
       </h2>
@@ -417,7 +419,8 @@ const statusVideos = {
 
     {activeTab === "orders" && (
       <>
-        <div className="flex flex-wrap gap-3 mb-8">
+       <div className="flex gap-3 mb-8 overflow-x-auto scrollbar-hide py-2">
+
           {["All", "pending", "confirmed", "cooking", "Out for Delivery"].map((tab) => (
             <button
               key={tab}
@@ -495,7 +498,8 @@ const statusVideos = {
 </div>
 
 
-                     <div className="flex-shrink-0 w-full sm:w-auto flex flex-col items-end gap-3">
+                   <div className="flex-shrink-0 w-full sm:w-auto flex flex-col sm:items-end items-start gap-3">
+
   {/* 💰 Price & Delivery Section */}
   <div className="text-right">
     <div className="text-xl font-bold flex items-center justify-end gap-1 text-gray-900 dark:text-gray-100">
@@ -546,7 +550,7 @@ const statusVideos = {
         exit={{ opacity: 0, y: -5 }}
         transition={{ duration: 0.3 }}
         onClick={() => handleCancelOrder(order._id)}
-        className="flex items-center justify-center gap-1 px-4 py-1.5 text-sm rounded-full bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg transition-all"
+        className="flex items-center justify-center gap-1 px-3 py-1 text-xs sm:text-sm rounded-full bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg transition-all"
       >
         <Timer className="w-4 h-4 animate-pulse" />
         Cancel ({Math.ceil(remaining / 1000)}s)
@@ -558,7 +562,7 @@ const statusVideos = {
                     </div>
 
   <div className="mt-6 flex justify-center">
-  <div className="relative w-48 h-48 sm:w-77 sm:h-67 rounded-full overflow-hidden shadow-lg border-4 border-indigo-500/70 bg-white">
+  <div className="relative w-36 h-36 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shadow-lg border-4 border-indigo-500/70 bg-white">
    <motion.video
   key={order.status}
   src={statusVideos[order.status?.toLowerCase()] || "/videos/default.mp4"}

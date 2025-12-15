@@ -181,113 +181,153 @@ export default function LoginPage() {
         </div>
 
         {/* Right Section (Form) */}
-        <div className="flex-1 flex items-center justify-center p-6 sm:p-8">
-          <div className="w-full max-w-md bg-white/95 dark:bg-gray-900/95 rounded-xl shadow-md p-6 sm:p-8">
-            {/* Logo */}
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <img src="/puttylogo1.png" alt="PUTTYBOX" className="w-16 h-16 object-contain" />
-              <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-green-400 to-black bg-clip-text text-transparent">
-                PUTTYBOX
-              </h1>
-            </div>
+<div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8">
+  <div className="w-full max-w-sm sm:max-w-md bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-lg p-6 sm:p-8">
+    
+    {/* Logo */}
+    <div className="flex items-center justify-center gap-2 sm:gap-3 mb-5">
+      <img
+        src="/puttylogo1.png"
+        alt="PUTTYBOX"
+        className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+      />
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-green-500 to-black bg-clip-text text-transparent">
+        PUTTYBOX
+      </h1>
+    </div>
 
-            <h2 className="text-xl sm:text-2xl font-bold text-center text-blue-900 dark:text-white mb-4">
-              {isAdmin ? "Admin Login" : isSignup ? "Create Account" : "Sign In"}
-            </h2>
+    {/* Heading */}
+    <h2
+      className="
+        text-lg sm:text-xl md:text-2xl
+        font-bold text-center
+        text-blue-900 dark:text-white
+        mb-5 leading-snug
+      "
+    >
+      {isAdmin
+        ? "Admin Login"
+        : isSignup
+        ? "Create Your Account"
+        : "Welcome Back"}
+    </h2>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name (signup only & not admin) */}
-              {!isAdmin && isSignup && (
-                <div>
-                  <label htmlFor="name" className="sr-only">
-                    Full name
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    name="name"
-                    placeholder="Full Name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 rounded-lg bg-gray-100/80 dark:bg-gray-800/70 border border-gray-200/60 focus:ring-2 focus:ring-emerald-300 outline-none text-sm"
-                  />
-                </div>
-              )}
+    {/* Form */}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      
+      {/* Name (signup only & not admin) */}
+      {!isAdmin && isSignup && (
+        <input
+          type="text"
+          name="name"
+          placeholder="Full Name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          className="
+            w-full px-4 py-3 rounded-lg
+            bg-gray-100/80 dark:bg-gray-800/70
+            border border-gray-200/60
+            focus:ring-2 focus:ring-emerald-300
+            outline-none text-sm
+          "
+        />
+      )}
 
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  placeholder="Email Address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-lg bg-gray-100/80 dark:bg-gray-800/70 border border-gray-200/60 focus:ring-2 focus:ring-emerald-300 outline-none text-sm"
-                />
-              </div>
+      {/* Email */}
+      <input
+        type="email"
+        name="email"
+        placeholder="Email Address"
+        value={formData.email}
+        onChange={handleChange}
+        required
+        className="
+          w-full px-4 py-3 rounded-lg
+          bg-gray-100/80 dark:bg-gray-800/70
+          border border-gray-200/60
+          focus:ring-2 focus:ring-emerald-300
+          outline-none text-sm
+        "
+      />
 
-              <div className="relative">
-                <label htmlFor="password" className="sr-only">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-lg bg-gray-100/80 dark:bg-gray-800/70 border border-gray-200/60 focus:ring-2 focus:ring-emerald-300 outline-none text-sm pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md text-gray-600 hover:bg-gray-100/60"
-                >
-                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                </button>
-              </div>
+      {/* Password */}
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          className="
+            w-full px-4 py-3 pr-12 rounded-lg
+            bg-gray-100/80 dark:bg-gray-800/70
+            border border-gray-200/60
+            focus:ring-2 focus:ring-emerald-300
+            outline-none text-sm
+          "
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword((s) => !s)}
+          aria-label={showPassword ? "Hide password" : "Show password"}
+          className="
+            absolute right-2 top-1/2 -translate-y-1/2
+            p-2 rounded-md text-gray-600
+            hover:bg-gray-200/60 dark:hover:bg-gray-700/60
+          "
+        >
+          {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+        </button>
+      </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:opacity-95 text-sm"
-                aria-busy={loading}
-              >
-                {loading ? "Processing..." : isAdmin ? "Admin Login" : isSignup ? "Sign Up" : "Login"}
-              </button>
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={loading}
+        className="
+          w-full py-3 rounded-lg
+          bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500
+          text-white font-semibold text-sm
+          hover:opacity-95 transition
+        "
+      >
+        {loading
+          ? "Processing..."
+          : isAdmin
+          ? "Admin Login"
+          : isSignup
+          ? "Sign Up"
+          : "Login"}
+      </button>
 
-              {!isAdmin && !isSignup && (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setForgotModalOpen(true)}
-                    className="text-sm text-purple-600 hover:underline"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-              )}
+      {/* Forgot password */}
+      {!isAdmin && !isSignup && (
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setForgotModalOpen(true)}
+            className="text-xs sm:text-sm text-purple-600 hover:underline"
+          >
+            Forgot Password?
+          </button>
+        </div>
+      )}
 
-              {!isAdmin && (
-                <div className="flex justify-center mt-2">
-                  <div className="w-full max-w-xs">
-                    <GoogleLogin
-                      onSuccess={handleGoogleLogin}
-                      onError={() => toast.error("Google login failed")}
-                    />
-                  </div>
-                </div>
-              )}
-            </form>
+      {/* Google Login */}
+      {!isAdmin && (
+        <div className="flex justify-center pt-2">
+          <div className="w-full max-w-xs">
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => toast.error("Google login failed")}
+            />
+          </div>
+        </div>
+      )}
+    </form>
+  
 
             {/* Switch Modes */}
             <div className="mt-4 text-center text-sm space-y-2">

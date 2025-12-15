@@ -8,23 +8,29 @@ const PlanOrderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    planType: { type: String, required: true },
-    selected: { type: Object, required: true },
-    proteinTarget: { type: Number },
+    planType: {
+      type: String,
+      required: true,
+    },
+    selected: {
+      type: Object,
+      required: true,
+    },
+    proteinTarget: Number,
+
+    // ✅ UPDATED ENUM
     status: {
       type: String,
-      enum: ["scheduled", "in-progress", "delivered"],
+      enum: ["scheduled", "in-progress", "delivered", "cancelled"],
       default: "scheduled",
     },
+
     estimatedDelivery: {
       type: Date,
-      default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // next day
+      default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
     },
   },
   { timestamps: true }
 );
 
-const PlanOrder =
-  mongoose.models.PlanOrder || mongoose.model("PlanOrder", PlanOrderSchema);
-
-export default PlanOrder;
+export default mongoose.model("PlanOrder", PlanOrderSchema);
