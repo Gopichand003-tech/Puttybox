@@ -9,11 +9,9 @@ html, body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background-color: #242424;
+  overflow-y: auto;
+  background-color: #f3f4f6;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.87);
 }
 
 /* Light mode support */
@@ -96,10 +94,7 @@ h1 {
   margin: 0 !important;
 }
 
-html, body {
-  background-color: #f3f4f6; /* gray-100 */
-  overscroll-behavior: none;
-}
+
 
 @media (prefers-color-scheme: dark) {
   html, body {
