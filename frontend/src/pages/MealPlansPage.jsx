@@ -199,30 +199,50 @@ export default function MealPlansPage() {
         </motion.div>
       </motion.section>
 
-      {/* Category Buttons */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex justify-center flex-wrap gap-3 my-8 sticky top-20 z-40 px-4"
-      >
-        {categories.map((cat) => (
-          <motion.button
-            key={cat.name}
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={() => setActiveCategory(cat.name)}
-            className={`px-4 sm:px-6 py-2.5 rounded-full text-sm sm:text-base font-medium border transition-all duration-250 backdrop-blur bg-white/60 flex items-center gap-2 ${
-              activeCategory === cat.name
-                ? "bg-green-600 text-white border-green-600 shadow-md scale-105"
-                : "text-gray-800 border-gray-200 hover:bg-green-50 hover:border-green-300"
+     {/* Category Buttons */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+  className="flex justify-center flex-wrap gap-3 my-8 sticky top-20 z-40 px-4"
+>
+  <div className="relative flex flex-wrap justify-center gap-3 bg-white/40 backdrop-blur-xl px-3 py-3 rounded-2xl shadow-lg border border-white/30">
+    
+    {categories.map((cat) => {
+      const isActive = activeCategory === cat.name;
+
+      return (
+        <motion.button
+          key={cat.name}
+          onClick={() => setActiveCategory(cat.name)}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          className="relative px-5 py-2.5 rounded-full text-sm sm:text-base font-medium transition-all duration-300 flex items-center gap-2"
+        >
+          {/* Sliding Active Background */}
+          {isActive && (
+            <motion.span
+              layoutId="activeCategory"
+              className="absolute inset-0 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg"
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            />
+          )}
+
+          {/* Icon + Text */}
+          <span
+            className={`relative z-10 flex items-center gap-2 ${
+              isActive ? "text-white" : "text-gray-700"
             }`}
-            aria-pressed={activeCategory === cat.name}
           >
-            {cat.icon && React.createElement(cat.icon, { className: "w-4 h-4" })}
+            {cat.icon &&
+              React.createElement(cat.icon, { className: "w-4 h-4" })}
             {cat.name}
-          </motion.button>
-        ))}
-      </motion.div>
+          </span>
+        </motion.button>
+      );
+    })}
+  </div>
+</motion.div>
 
       {/* Meal Plan Cards */}
       <div className="relative space-y-16 px-4 sm:px-8 md:px-12 lg:px-20 pb-24">
